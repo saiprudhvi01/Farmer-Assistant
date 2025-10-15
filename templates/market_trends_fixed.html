@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">📈 {{ title }}</h1>
+                    <p class="text-muted mb-0">Real-time market prices and trend analysis</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                        <i class="bi bi-arrow-repeat me-1"></i> Refresh
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="alert('Export functionality will be implemented here')">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Market Overview Cards -->
+            <div class="row g-4">
+                {% for item in market_data %}
+                <div class="col-xl-4 col-lg-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 pt-3">
+                            <h5 class="card-title mb-1">{{ item.crop }}</h5>
+                            <p class="text-muted small mb-0">{{ item.variety }}</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- Price Information -->
+                            <div class="mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold">
+                                        <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                        {{ item.location }}
+                                    </span>
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-currency-rupee"></i>
+                                        {{ "%.2f"|format(item.price) }}
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-end">
+                                    <div>
+                                        <small class="text-muted">Per {{ item.unit }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="d-block text-muted">
+                                            <i class="bi bi-calendar3"></i> 
+                                            {{ item.date }}
+                                        </small>
+                                        {% if item.farmer_id %}
+                                        <small class="badge bg-light text-dark">
+                                            <i class="bi bi-person"></i> 
+                                            Farmer #{{ item.farmer_id }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 text-center py-2">
+                            <small class="text-muted">
+                                <i class="bi bi-tag-fill text-warning"></i> {{ item.variety }} • 
+                                <i class="bi bi-clock-history text-secondary"></i> {{ now.strftime('%d %b %H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

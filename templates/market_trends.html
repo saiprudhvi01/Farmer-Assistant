@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="jumbotron bg-gradient-primary text-white rounded-3 p-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h1 class="display-4 fw-bold mb-3">
+                            <i class="bi bi-graph-up me-3"></i>{{ title }}
+                        </h1>
+                        <p class="lead mb-4">
+                            {% if location %}
+                                Smart market insights for crops suitable in {{ location }} based on real-time weather analysis
+                            {% else %}
+                                Discover market trends, prices, and opportunities across India
+                            {% endif %}
+                        </p>
+                        {% if location %}
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge bg-light text-dark me-3 px-3 py-2">
+                                <i class="bi bi-geo-alt me-2"></i>{{ location }}
+                            </span>
+                            <span class="text-white-50">• Updated {{ now.strftime('%I:%M %p') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-4 text-center">
+                        <div class="weather-summary p-4 bg-white bg-opacity-10 rounded-3">
+                            {% if location and api_result %}
+                            <h3 class="h4 mb-3">Current Conditions</h3>
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-thermometer-half display-6 text-warning"></i>
+                                        <div class="mt-2">
+                                            <div class="fw-bold">{{ "%.1f"|format(api_result.weather_data.temperature) }}°C</div>
+                                            <small class="text-white-75">Temp</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-droplet display-6 text-info"></i>
+                                        <div class="mt-2">
+                                            <div class="fw-bold">{{ "%.1f"|format(api_result.weather_data.humidity) }}%</div>
+                                            <small class="text-white-75">Humidity</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-cloud-rain display-6 text-primary"></i>
+                                        <div class="mt-2">
+                                            <div class="fw-bold">{{ "%.0f"|format(api_result.weather_data.rainfall) }}</div>
+                                            <small class="text-white-75">mm Rain</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <h3 class="h4 mb-3">Market Overview</h3>
+                            <p class="mb-0">Get location-specific insights by entering your city or district</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Search (only show if no location) -->
+    {% if not location %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h3 class="h4 mb-3">🔍 Get Location-Specific Market Trends</h3>
+                            <p class="text-muted mb-4">Enter your location to see crop prices for crops that are suitable for your area's weather conditions and soil type.</p>
+                            <form action="/market-trends" method="GET" class="d-flex gap-3">
+                                <div class="flex-grow-1">
+                                    <input type="text" name="location" class="form-control form-control-lg"
+                                           placeholder="Enter city or district name (e.g., Mumbai, Delhi, Pune)" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-search me-2"></i>Get Market Trends
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5 class="h6 mb-3">✨ What you'll get:</h5>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <small>Weather-based crop recommendations</small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <small>Local market prices & trends</small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <small>Supply & demand insights</small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <small>Profitability analysis</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Location-based Weather and Crop Info -->
+    {% if location and api_result %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Top Recommended Crops for {{ location }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        {% for rec in api_result.recommendations %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="crop-card h-100 border rounded-3 p-3 bg-light">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="crop-icon me-3">
+                                        <i class="bi bi-flower1 text-success fs-1"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">{{ rec.crop }}</h6>
+                                        <span class="badge bg-success">{{ rec.confidence }}% Match</span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-3">{{ rec.reason }}</p>
+                                <div class="weather-match">
+                                    <h6 class="small text-muted mb-2">Optimal Conditions:</h6>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <small class="d-block text-center">
+                                                <i class="bi bi-thermometer-half text-warning"></i><br>
+                                                {{ rec.weather_match.temperature }}
+                                            </small>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="d-block text-center">
+                                                <i class="bi bi-cloud-rain text-info"></i><br>
+                                                {{ rec.weather_match.rainfall }}
+                                            </small>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="d-block text-center">
+                                                <i class="bi bi-droplet text-primary"></i><br>
+                                                {{ rec.weather_match.humidity }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 p-3 bg-info bg-opacity-10 rounded">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Recommendations based on NASA Power API weather analysis for {{ location }}.
+                            {% if market_data and market_data|length > 0 %}
+                                Showing {{ market_data|length }} suitable crop(s) with market prices.
+                            {% else %}
+                                No specific market data found for recommended crops. Showing estimated prices based on weather suitability.
+                            {% endif %}
+                            Actual suitability may vary based on soil conditions and local factors.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Market Overview Cards -->
+    {% if market_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="h4 mb-0">
+                    <i class="bi bi-shop me-2"></i>
+                    {% if location %}
+                        Market Prices in {{ location }}
+                    {% else %}
+                        Current Market Prices
+                    {% endif %}
+                </h3>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                        <i class="bi bi-arrow-repeat me-1"></i>Refresh
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="exportData()">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for item in market_data %}
+        <div class="col-xl-4 col-lg-6">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card-header bg-white border-0 pt-4 pb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="crop-avatar me-3">
+                                <i class="bi bi-flower1 text-success fs-3"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-1">{{ item.crop }}</h5>
+                                <p class="text-muted small mb-0">{{ item.variety }}</p>
+                            </div>
+                        </div>
+                        {% if location %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>Suitable
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Price Information -->
+                    <div class="price-section mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h3 class="mb-0 text-primary">₹{{ "%.2f"|format(item.price) }}</h3>
+                                <small class="text-muted">per {{ item.unit }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="location-badge mb-2">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ item.location }}
+                                </div>
+                                {% if item.farmer_id %}
+                                <small class="badge bg-light text-dark">
+                                    <i class="bi bi-person me-1"></i>Farmer #{{ item.farmer_id }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="progress mb-3" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                        </div>
+
+                        {% if location %}
+                        <div class="suitability-info p-3 bg-success bg-opacity-10 rounded">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <strong>{{ item.suitability }} Suitability</strong>
+                            </div>
+                            {% if item.confidence %}
+                            <small class="text-muted">
+                                {{ item.confidence }}% weather compatibility match
+                            </small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Info -->
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="info-item text-center p-3 bg-light rounded">
+                                <i class="bi bi-calendar3 text-primary mb-2"></i>
+                                <div class="fw-bold">{{ item.date }}</div>
+                                <small class="text-muted">Date</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-item text-center p-3 bg-light rounded">
+                                <i class="bi bi-check-circle text-success mb-2"></i>
+                                <div class="fw-bold">Available</div>
+                                <small class="text-muted">Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-0 text-center py-3">
+                    <small class="text-muted">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Last updated: {{ now.strftime('%d %b %Y, %I:%M %p') }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No Data Message -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-graph-down display-1 text-muted mb-4"></i>
+                <h3 class="text-muted">No Market Data Available</h3>
+                <p class="text-muted mb-4">
+                    {% if location %}
+                        We're working on getting market data for {{ location }}. Please check back later or try a different location.
+                    {% else %}
+                        Market data will appear here once you search for a specific location.
+                    {% endif %}
+                </p>
+                {% if not location %}
+                <a href="/market-trends" class="btn btn-primary">
+                    <i class="bi bi-search me-2"></i>Search by Location
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.weather-summary {
+    backdrop-filter: blur(10px);
+}
+
+.crop-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.crop-card:hover {
+    transform: translateY(-2px);
+    border-color: #28a745;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+}
+
+.crop-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.location-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.info-item {
+    transition: all 0.2s ease;
+}
+
+.info-item:hover {
+    background: #f8f9fa !important;
+    transform: translateY(-1px);
+}
+
+.jumbotron {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.jumbotron::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(2px);
+}
+</style>
+
+<script>
+function refreshPrices() {
+    location.reload();
+}
+
+function exportData() {
+    // Add export functionality here
+    alert('Export functionality will be implemented here');
+}
+
+// Add smooth scrolling for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading animation for cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

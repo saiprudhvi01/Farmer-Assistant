@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="h3 fw-bold">Join Farmer Assistant</h2>
+                        <p class="text-muted">Create your account to get started</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('auth.register') }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Basic Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                {{ form.username.label(class="form-label") }}
+                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                                {% if form.username.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.username.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                {{ form.password.label(class="form-label") }}
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                                {% if form.password.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.password2.label(class="form-label") }}
+                                {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else "")) }}
+                                {% if form.password2.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password2.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- User Type Selection -->
+                        <div class="mb-4">
+                            {{ form.user_type.label(class="form-label") }}
+                            {{ form.user_type(class="form-select" + (" is-invalid" if form.user_type.errors else "")) }}
+                            {% if form.user_type.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.user_type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                {{ form.full_name.label(class="form-label") }}
+                                {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                                {% if form.full_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.full_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Farmer-specific fields -->
+                        <div id="farmer-fields" class="mb-4" style="display: none;">
+                            <h5 class="mb-3">Farm Information</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {{ form.farm_name.label(class="form-label") }}
+                                    {{ form.farm_name(class="form-control") }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    {{ form.farm_location.label(class="form-label") }}
+                                    {{ form.farm_location(class="form-control") }}
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    {{ form.farm_size.label(class="form-label") }}
+                                    {{ form.farm_size(class="form-control") }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    {{ form.primary_crops.label(class="form-label") }}
+                                    {{ form.primary_crops(class="form-control", placeholder="e.g., Rice, Wheat, Tomato") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buyer-specific fields -->
+                        <div id="buyer-fields" class="mb-4" style="display: none;">
+                            <h5 class="mb-3">Business Information</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {{ form.business_name.label(class="form-label") }}
+                                    {{ form.business_name(class="form-control") }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    {{ form.business_type.label(class="form-label") }}
+                                    {{ form.business_type(class="form-select") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Address Information</h5>
+                            <div class="mb-3">
+                                {{ form.address.label(class="form-label") }}
+                                {{ form.address(class="form-control", rows=3) }}
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    {{ form.city.label(class="form-label") }}
+                                    {{ form.city(class="form-control") }}
+                                </div>
+
+                                <div class="col-md-4">
+                                    {{ form.state.label(class="form-label") }}
+                                    {{ form.state(class="form-control") }}
+                                </div>
+
+                                <div class="col-md-4">
+                                    {{ form.postal_code.label(class="form-label") }}
+                                    {{ form.postal_code(class="form-control") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success btn-lg") }}
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <p class="mb-0">
+                                Already have an account?
+                                <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Sign in here</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('user_type');
+    const farmerFields = document.getElementById('farmer-fields');
+    const buyerFields = document.getElementById('buyer-fields');
+
+    function toggleFields() {
+        if (userTypeSelect.value === 'farmer') {
+            farmerFields.style.display = 'block';
+            buyerFields.style.display = 'none';
+        } else if (userTypeSelect.value === 'buyer') {
+            farmerFields.style.display = 'none';
+            buyerFields.style.display = 'block';
+        } else {
+            farmerFields.style.display = 'none';
+            buyerFields.style.display = 'none';
+        }
+    }
+
+    userTypeSelect.addEventListener('change', toggleFields);
+    toggleFields(); // Initial check
+});
+</script>
+{% endblock %}

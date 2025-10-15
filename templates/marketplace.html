@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Marketplace - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Marketplace Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Crop Marketplace</h1>
+            <p class="text-muted mb-0">Buy and sell agricultural produce directly</p>
+        </div>
+        <a href="#sell-crop" class="btn btn-success">
+            <i class="bi bi-plus-lg me-2"></i>Sell Your Crop
+        </a>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form class="row g-3">
+                <div class="col-md-5">
+                    <label for="search" class="form-label">Search Crops</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search" name="q" 
+                               placeholder="Search by crop name, variety, or location" 
+                               value="{{ request.args.get('q', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">All Categories</option>
+                        <option value="cereals">Cereals</option>
+                        <option value="vegetables">Vegetables</option>
+                        <option value="fruits">Fruits</option>
+                        <option value="pulses">Pulses</option>
+                        <option value="spices">Spices</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="newest">Newest First</option>
+                        <option value="price_low">Price: Low to High</option>
+                        <option value="price_high">Price: High to Low</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Crop Listings -->
+    <div class="row g-4 mb-5">
+        {% for item in listings %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="position-relative">
+                    <img src="{{ url_for('static', filename='images/crops/' + item.crop.lower() + '.jpg') }}" 
+                         class="card-img-top" 
+                         alt="{{ item.crop }}"
+                         style="height: 200px; object-fit: cover;"
+                         onerror="this.src='{{ url_for('static', filename='images/placeholder-crop.jpg') }}'">
+                    <span class="position-absolute top-0 end-0 bg-success text-white px-3 py-1 m-2 rounded-pill">
+                        ₹{{ "%.2f"|format(item.price) }}/{{ item.unit }}
+                    </span>
+                    {% if item.organic %}
+                    <span class="position-absolute top-0 start-0 bg-success text-white px-2 py-1 m-2 rounded-pill small">
+                        <i class="bi bi-leaf"></i> Organic
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">{{ item.crop }}</h5>
+                        <span class="badge bg-light text-dark">{{ item.variety }}</span>
+                    </div>
+                    <p class="text-muted mb-3">
+                        <i class="bi bi-geo-alt"></i> {{ item.location }}
+                        <span class="mx-2">•</span>
+                        <i class="bi bi-calendar"></i> {{ item.date }}
+                    </p>
+                    <p class="card-text">
+                        {{ item.description if item.description else 'High quality ' + item.crop.lower() + ' available for sale.' }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small">Quantity:</span>
+                            <strong class="ms-1">{{ item.quantity }} {{ item.unit }}</strong>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#contactSellerModal" 
+                                data-seller="{{ item.seller or 'Seller' }}" data-crop="{{ item.crop }}">
+                            <i class="bi bi-envelope"></i> Contact
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No listings found</h4>
+                <p class="text-muted">Try adjusting your search or filters</p>
+                <a href="{{ url_for('marketplace') }}" class="btn btn-outline-primary mt-2">Clear filters</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Marketplace pagination" class="mb-5">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Next</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Sell Crop Form -->
+    <div class="card border-0 shadow-sm mb-5" id="sell-crop">
+        <div class="card-header bg-white">
+            <h2 class="h4 mb-0">Sell Your Crop</h2>
+            <p class="text-muted mb-0">List your agricultural produce for sale</p>
+        </div>
+        <div class="card-body">
+            <form id="sellCropForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="cropName" class="form-label">Crop Name</label>
+                        <input type="text" class="form-control" id="cropName" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="variety" class="form-label">Variety (Optional)</label>
+                        <input type="text" class="form-control" id="variety">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="quantity" min="1" required>
+                            <select class="form-select" style="max-width: 100px;">
+                                <option>kg</option>
+                                <option>quintal</option>
+                                <option>ton</option>
+                                <option>bag</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="price" class="form-label">Price per unit (₹)</label>
+                        <input type="number" class="form-control" id="price" min="0" step="0.01" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" required>
+                    </div>
+                    <div class="col-12">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3" 
+                                  placeholder="Add details about your crop, quality, certifications, etc."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label for="cropImages" class="form-label">Upload Photos</label>
+                        <input class="form-control" type="file" id="cropImages" multiple accept="image/*">
+                        <div class="form-text">Upload clear photos of your crop (max 5 images)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="organic">
+                            <label class="form-check-label" for="organic">
+                                Organic/No Chemical
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="bi bi-upload me-2"></i>List for Sale
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Seller Modal -->
+<div class="modal fade" id="contactSellerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contact Seller</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactSellerForm">
+                    <div class="mb-3">
+                        <label for="messageSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="messageSubject" value="" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="buyerName" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="buyerName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="buyerPhone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="buyerPhone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="buyerMessage" class="form-label">Your Message</label>
+                        <textarea class="form-control" id="buyerMessage" rows="4" required></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send me-2"></i>Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update contact form with crop and seller info
+var contactSellerModal = document.getElementById('contactSellerModal');
+if (contactSellerModal) {
+    contactSellerModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var seller = button.getAttribute('data-seller');
+        var crop = button.getAttribute('data-crop');
+        
+        var modalTitle = contactSellerModal.querySelector('.modal-title');
+        var subjectInput = contactSellerModal.querySelector('#messageSubject');
+        
+        modalTitle.textContent = 'Contact ' + seller;
+        subjectInput.value = 'Interested in ' + crop + ' - ' + seller;
+    });
+}
+
+// Form submission handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Sell crop form
+    const sellForm = document.getElementById('sellCropForm');
+    if (sellForm) {
+        sellForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Add form submission logic here
+            alert('Your crop has been listed successfully!');
+            this.reset();
+        });
+    }
+    
+    // Contact seller form
+    const contactForm = document.getElementById('contactSellerForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Add form submission logic here
+            alert('Your message has been sent to the seller!');
+            var modal = bootstrap.Modal.getInstance(contactSellerModal);
+            modal.hide();
+            this.reset();
+        });
+    }
+});
+</script>
+{% endblock %}

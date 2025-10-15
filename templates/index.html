@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Farmer Assistant{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section bg-light py-5 text-center mb-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3">Welcome to Farmer Assistant</h1>
+        <p class="lead mb-4">AI-powered platform for modern farming solutions and marketplace</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('crop_recommendation') }}" class="btn btn-success btn-lg">
+                <i class="bi bi-arrow-up-right-circle"></i> Get Crop Recommendations
+            </a>
+            <a href="{{ url_for('crop_recommendation_api') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-satellite"></i> NASA API Recommendations
+            </a>
+            <a href="{{ url_for('marketplace') }}" class="btn btn-outline-success btn-lg">
+                <i class="bi bi-shop"></i> Visit Marketplace
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-5">Our Features</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-success bg-opacity-10 text-success rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px;">
+                        <i class="bi bi-arrow-up-right-circle fs-3"></i>
+                    </div>
+                    <h4 class="card-title">Crop Recommendation</h4>
+                    <p class="card-text">Get personalized crop suggestions based on your soil, location, and weather conditions.</p>
+                    <a href="{{ url_for('crop_recommendation') }}" class="btn btn-outline-success mt-2">Try Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px;">
+                        <i class="bi bi-satellite fs-3"></i>
+                    </div>
+                    <h4 class="card-title">NASA API Crop Recommendation</h4>
+                    <p class="card-text">Get AI-powered crop suggestions using real-time weather data from NASA Power API.</p>
+                    <a href="{{ url_for('crop_recommendation_api') }}" class="btn btn-outline-primary mt-2">Try NASA API</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-warning bg-opacity-10 text-warning rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px;">
+                        <i class="bi bi-bug fs-3"></i>
+                    </div>
+                    <h4 class="card-title">Disease Detection</h4>
+                    <p class="card-text">Select your crop and symptoms to get AI-powered disease diagnosis and treatment recommendations.</p>
+                    <a href="{{ url_for('disease_detection') }}" class="btn btn-outline-warning mt-2">Detect Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-info bg-opacity-10 text-info rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px;">
+                        <i class="bi bi-graph-up fs-3"></i>
+                    </div>
+                    <h4 class="card-title">Market Trends</h4>
+                    <p class="card-text">Stay updated with real-time market prices and trends for various crops.</p>
+                    <a href="{{ url_for('market_trends') }}" class="btn btn-outline-info mt-2">View Trends</a>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Marketplace Preview -->
+<div class="container-fluid bg-light py-5 mb-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Featured Crops</h2>
+            <a href="{{ url_for('marketplace') }}" class="btn btn-outline-success">View All</a>
+        </div>
+        <div class="row g-4">
+            {% for item in market_data %}
+            <div class="col-md-3 col-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="position-relative">
+                        <img src="{{ url_for('static', filename='images/crops/' + item.crop.lower() + '.jpg') }}" 
+                             class="card-img-top" 
+                             alt="{{ item.crop }}"
+                             onerror="this.src='{{ url_for('static', filename='images/placeholder-crop.jpg') }}'">
+                        <span class="position-absolute top-0 end-0 bg-success text-white px-2 py-1 m-2 rounded">
+                            ₹{{ "%.2f"|format(item.price) }}/{{ item.unit }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.crop }} <small class="text-muted">{{ item.variety }}</small></h5>
+                        <p class="card-text text-muted">
+                            <i class="bi bi-geo-alt"></i> {{ item.location }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Community Section -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Community Forum</h2>
+        <a href="{{ url_for('community') }}" class="btn btn-outline-success">View All Discussions</a>
+    </div>
+    <div class="row g-4">
+        {% for post in posts %}
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <p class="card-text text-muted">
+                        <small>By {{ post.author }} • {{ post.date }}</small>
+                    </p>
+                    <p class="card-text">{{ post.content[:150] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">
+                            <i class="bi bi-chat-left-text"></i> {{ post.comments|length }} comments
+                        </span>
+                        <a href="{{ url_for('community') }}#post-{{ post.id }}" class="btn btn-sm btn-outline-success">
+                            Read More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="bg-success text-white py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to transform your farming experience?</h2>
+        <p class="lead mb-4">Join thousands of farmers using our platform to make informed decisions.</p>
+        <a href="{{ url_for('crop_recommendation') }}" class="btn btn-light btn-lg">
+            Get Started for Free
+        </a>
+    </div>
+</div>
+{% endblock %}

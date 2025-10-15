@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Recommendation (NASA API) - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="h4 mb-0">🌍 Crop Recommendation using NASA Power API</h2>
+                <p class="text-muted mb-0">Get AI-powered crop suggestions based on real-time weather data from NASA</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('crop_recommendation_api') }}">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="location" class="form-label">📍 Location</label>
+                            <input type="text" class="form-control form-control-lg" id="location" name="location"
+                                   value="{{ location }}" placeholder="Enter your city, state, or region (e.g., Mumbai, Maharashtra)" required>
+                            <div class="form-text">We'll fetch real-time weather data from NASA Power API for accurate recommendations</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            🚀 Get Crop Recommendations (NASA API)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if api_result %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h3 class="h5 mb-0">📊 Crop Recommendations for {{ api_result.location.title() }}</h3>
+            </div>
+            <div class="card-body">
+                <!-- Weather Data Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>🌤️ Current Weather Conditions</h5>
+                        <div class="weather-summary">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <strong>Temperature:</strong><br>
+                                    {{ api_result.weather_data.temperature }}°C
+                                </div>
+                                <div class="col-6">
+                                    <strong>Humidity:</strong><br>
+                                    {{ api_result.weather_data.humidity }}%
+                                </div>
+                                <div class="col-6">
+                                    <strong>Rainfall:</strong><br>
+                                    {{ api_result.weather_data.rainfall|round(0) }}mm/year
+                                </div>
+                                <div class="col-6">
+                                    <strong>Wind Speed:</strong><br>
+                                    {{ api_result.weather_data.wind_speed }} m/s
+                                </div>
+                            </div>
+                            <small class="text-muted">Data source: {{ api_result.weather_data.data_source }}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>📍 Location Details</h5>
+                        <p><strong>Coordinates:</strong> {{ api_result.coordinates.lat }}°, {{ api_result.coordinates.lon }}°</p>
+                        <p><strong>Data Retrieved:</strong> {{ api_result.timestamp[:19].replace('T', ' ') }}</p>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                {% if api_result.recommendations %}
+                <h5>🌾 Recommended Crops (Top {{ api_result.recommendations|length }})</h5>
+                <div class="row">
+                    {% for rec in api_result.recommendations %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-success">{{ rec.crop }}</h6>
+                                <div class="confidence-badge mb-2">
+                                    <span class="badge bg-success">{{ rec.confidence }}% Match</span>
+                                </div>
+                                <p class="card-text small">{{ rec.reason }}</p>
+
+                                <!-- Weather Match Details -->
+                                <div class="weather-match mt-3">
+                                    <small class="text-muted">Weather Match:</small>
+                                    <div class="small">
+                                        <div>🌡️ {{ rec.weather_match.temperature }}</div>
+                                        <div>🌧️ {{ rec.weather_match.rainfall }}</div>
+                                        <div>💧 {{ rec.weather_match.humidity }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <h6>ℹ️ No Recommendations</h6>
+                    <p>The current weather conditions in {{ api_result.location }} may not be suitable for the common crops in our database. Consider consulting local agricultural experts for alternative options.</p>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <a href="{{ url_for('crop_recommendation_api') }}" class="btn btn-outline-primary me-2">
+                            🔄 Try Another Location
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            🏠 Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Information Section -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <h5>ℹ️ About NASA Power API Crop Recommendations</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🌍 How It Works</h6>
+                        <ul class="list-unstyled">
+                            <li>✅ Enter your location (city, state, region)</li>
+                            <li>✅ We fetch coordinates using geocoding</li>
+                            <li>✅ NASA Power API provides real-time weather data</li>
+                            <li>✅ AI analyzes conditions for optimal crops</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>📊 Weather Parameters Used</h6>
+                        <ul class="list-unstyled">
+                            <li>🌡️ Temperature (daily average)</li>
+                            <li>💧 Humidity levels</li>
+                            <li>🌧️ Annual rainfall patterns</li>
+                            <li>🌬️ Wind speed conditions</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <strong>Note:</strong> Recommendations are based on historical weather patterns. Always consult local agricultural experts for the best results in your specific area.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">{{ title }}</h2>
+                    <p class="text-muted mb-0">Manage your crop listings and connect with buyers</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addListingModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Listing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam text-success fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ listings|length }}</h4>
+                    <small class="text-muted">Active Listings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-handshake text-primary fs-1 mb-2"></i>
+                    <h4 class="mb-1">0</h4>
+                    <small class="text-muted">Pending Offers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle text-warning fs-1 mb-2"></i>
+                    <h4 class="mb-1">0</h4>
+                    <small class="text-muted">Accepted Offers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up text-info fs-1 mb-2"></i>
+                    <h4 class="mb-1">0</h4>
+                    <small class="text-muted">Total Sales</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listings -->
+    {% if listings %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Your Crop Listings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        {% for listing in listings %}
+                        <div class="col-lg-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h5 class="card-title mb-1">{{ listing.crop_name }}</h5>
+                                            <p class="text-muted small mb-0">{{ listing.variety or 'Standard Variety' }}</p>
+                                        </div>
+                                        <span class="badge {% if listing.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if listing.is_available %}Available{% else %}Sold{% endif %}
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-6">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="bi bi-boxes text-primary mb-1"></i>
+                                                <div class="fw-bold">{{ "%.1f"|format(listing.quantity) }} {{ listing.unit }}</div>
+                                                <small class="text-muted">Quantity</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="bi bi-currency-rupee text-success mb-1"></i>
+                                                <div class="fw-bold">{{ "%.2f"|format(listing.price_per_unit) }}</div>
+                                                <small class="text-muted">per {{ listing.unit }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-alt text-primary me-2"></i>
+                                            <span>{{ listing.location }}</span>
+                                        </div>
+                                        {% if listing.description %}
+                                        <p class="text-muted small mb-2">{{ listing.description }}</p>
+                                        {% endif %}
+                                        {% if listing.is_organic %}
+                                        <span class="badge bg-success">Organic</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-primary btn-sm edit-listing-btn" data-listing-id="{{ listing.id }}">
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm view-offers-btn" data-listing-id="{{ listing.id }}">
+                                            <i class="bi bi-eye me-1"></i>View Offers
+                                        </button>
+                                        {% if listing.is_available %}
+                                        <button class="btn btn-outline-danger btn-sm mark-sold-btn" data-listing-id="{{ listing.id }}">
+                                            <i class="bi bi-x-circle me-1"></i>Mark Sold
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-light">
+                                    <small class="text-muted">
+                                        Listed {{ listing.created_at.strftime('%d %b %Y') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No listings -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam display-1 text-muted mb-4"></i>
+                <h3 class="text-muted">No Crop Listings</h3>
+                <p class="text-muted mb-4">You haven't listed any crops for sale yet. Start by adding your first listing!</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addListingModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add Your First Listing
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Listing Modal -->
+<div class="modal fade" id="addListingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Crop Listing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addListingForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Crop Name *</label>
+                            <select class="form-select" name="crop_name" required>
+                                <option value="">Select Crop</option>
+                                <option value="Rice">Rice</option>
+                                <option value="Wheat">Wheat</option>
+                                <option value="Maize">Maize</option>
+                                <option value="Cotton">Cotton</option>
+                                <option value="Sugarcane">Sugarcane</option>
+                                <option value="Tomato">Tomato</option>
+                                <option value="Potato">Potato</option>
+                                <option value="Onion">Onion</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Variety</label>
+                            <input type="text" class="form-control" name="variety" placeholder="e.g., Basmati, Hybrid">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity *</label>
+                            <input type="number" class="form-control" name="quantity" step="0.1" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unit *</label>
+                            <select class="form-select" name="unit" required>
+                                <option value="kg">Kilograms (kg)</option>
+                                <option value="quintal">Quintal</option>
+                                <option value="ton">Ton</option>
+                                <option value="bunch">Bunch</option>
+                                <option value="dozen">Dozen</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Price per Unit *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" name="price_per_unit" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-control" name="location"
+                                   value="{{ farmer.city }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"
+                                      placeholder="Describe quality, condition, any special features..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_organic" id="is_organic">
+                                <label class="form-check-label" for="is_organic">
+                                    This is an organic crop
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editListing(listingId) {
+    // TODO: Implement edit functionality
+    alert('Edit functionality will be implemented');
+}
+
+function viewOffers(listingId) {
+    // TODO: Show offers for this listing
+    window.location.href = `/offers/${listingId}`;
+}
+
+function markAsSold(listingId) {
+    if (confirm('Are you sure you want to mark this listing as sold?')) {
+        // TODO: Implement mark as sold
+        alert('Mark as sold functionality will be implemented');
+    }
+}
+
+// Add listing form submission
+document.getElementById('addListingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+
+    // Submit to backend
+    fetch('/api/add-listing', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Listing added successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        alert('Error adding listing: ' + error.message);
+    });
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('addListingModal')).hide();
+});
+
+// Event listeners for listing buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit listing buttons
+    document.querySelectorAll('.edit-listing-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const listingId = this.dataset.listingId;
+            alert('Edit functionality for listing ' + listingId + ' will be implemented');
+        });
+    });
+
+    // View offers buttons
+    document.querySelectorAll('.view-offers-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const listingId = this.dataset.listingId;
+            window.location.href = `/offers/${listingId}`;
+        });
+    });
+
+    // Mark sold buttons
+    document.querySelectorAll('.mark-sold-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const listingId = this.dataset.listingId;
+            if (confirm('Are you sure you want to mark this listing as sold?')) {
+                alert('Mark as sold functionality for listing ' + listingId + ' will be implemented');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

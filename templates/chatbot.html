@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Chatbot - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="h4 mb-0">Farming Chatbot</h2>
+                <p class="text-muted mb-0">Ask questions about crops, diseases, recommendations, and more!</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('chatbot') }}">
+                    <div class="mb-3">
+                        <label for="query" class="form-label">Your Question</label>
+                        <input type="text" class="form-control" id="query" name="query" placeholder="e.g., How to detect crop diseases?" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Ask</button>
+                </form>
+            </div>
+        </div>
+
+        {% if response %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h3 class="h5 mb-0">Chatbot Response</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    {{ response|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

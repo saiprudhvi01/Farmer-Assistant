@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">📈 {{ title }}</h1>
+                    <p class="text-muted mb-0">Real-time market prices and trend analysis</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm" onclick="refreshPrices()">
+                        <i class="bi bi-arrow-repeat me-1"></i> Refresh
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="exportData()">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Market Overview Cards -->
+            <div class="row mb-4">
+                {% for crop, data in market_data.items() %}
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <span class="badge bg-{{ 'success' if data.trend == 'up' else 'danger' }} fs-6 px-3 py-2">
+                                    <i class="bi bi-graph-{{ 'up' if data.trend == 'up' else 'down' }} me-1"></i>
+                                    {{ data.trend|upper }} {{ data.change_percent }}%
+                                </span>
+                            </div>
+                            <h5 class="card-title text-capitalize mb-2">{{ crop }}</h5>
+                            <h3 class="text-primary mb-1">₹{{ data.current_price }}</h3>
+                            <small class="text-muted">per quintal</small>
+                            <div class="mt-2">
+                                <small class="text-muted">Previous: ₹{{ data.previous_price }}</small>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-light text-dark">📍 {{ data.location }}</span>
+                                <span class="badge bg-light text-dark">⭐ {{ data.grade }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Market Analysis Tabs -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="marketTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+                                    data-bs-target="#overview" type="button" role="tab">
+                                <i class="bi bi-graph-up me-1"></i> Overview
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="trends-tab" data-bs-toggle="tab"
+                                    data-bs-target="#trends" type="button" role="tab">
+                                <i class="bi bi-bar-chart-line me-1"></i> Price Trends
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="predictions-tab" data-bs-toggle="tab"
+                                    data-bs-target="#predictions" type="button" role="tab">
+                                <i class="bi bi-robot me-1"></i> AI Predictions
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="analytics-tab" data-bs-toggle="tab"
+                                    data-bs-target="#analytics" type="button" role="tab">
+                                <i class="bi bi-pie-chart me-1"></i> Market Analytics
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3" id="marketTabsContent">
+                        <!-- Overview Tab -->
+                        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="mb-3">📊 Market Summary</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Crop</th>
+                                                    <th>Current Price</th>
+                                                    <th>Change</th>
+                                                    <th>Volume (MT)</th>
+                                                    <th>Location</th>
+                                                    <th>Grade</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for crop, data in market_data.items() %}
+                                                <tr>
+                                                    <td><strong class="text-capitalize">{{ crop }}</strong></td>
+                                                    <td class="fw-bold text-primary">₹{{ data.current_price }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{{ 'success' if data.trend == 'up' else 'danger' }}">
+                                                            <i class="bi bi-graph-{{ 'up' if data.trend == 'up' else 'down' }}"></i>
+                                                            {{ data.change_percent }}%
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ data.volume|number_format }}</td>
+                                                    <td>{{ data.location }}</td>
+                                                    <td><span class="badge bg-light">{{ data.grade }}</span></td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-3">🎯 Market Insights</h5>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="text-success mb-3">
+                                                <i class="bi bi-graph-up me-1"></i> Trending Up ({{ market_data|selectattr('trend', 'equalto', 'up')|list|length }} crops)
+                                            </h6>
+                                            {% for crop, data in market_data.items() %}
+                                                {% if data.trend == 'up' %}
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="text-capitalize">{{ crop }}</span>
+                                                    <span class="badge bg-success">+{{ data.change_percent }}%</span>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            <hr>
+
+                                            <h6 class="text-danger mb-3">
+                                                <i class="bi bi-graph-down me-1"></i> Trending Down ({{ market_data|selectattr('trend', 'equalto', 'down')|list|length }} crops)
+                                            </h6>
+                                            {% for crop, data in market_data.items() %}
+                                                {% if data.trend == 'down' %}
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="text-capitalize">{{ crop }}</span>
+                                                    <span class="badge bg-danger">{{ data.change_percent }}%</span>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price Trends Tab -->
+                        <div class="tab-pane fade" id="trends" role="tabpanel">
+                            <h5 class="mb-3">📈 Price Trends (Last 30 Days)</h5>
+                            <div class="row">
+                                {% for crop, history in price_history.items() %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0 text-capitalize">{{ crop }} Price Trend</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="{{ crop }}_chart" width="400" height="200"></canvas>
+                                            <script>
+                                                // Simple price trend visualization
+                                                const {{ crop }}_ctx = document.getElementById('{{ crop }}_chart');
+                                                const {{ crop }}_data = {{ history|tojson }};
+
+                                                // Create a simple bar chart representation
+                                                const prices = {{ crop }}_data.map(d => d.price);
+                                                const maxPrice = Math.max(...prices);
+                                                const minPrice = Math.min(...prices);
+
+                                                {{ crop }}_ctx.innerHTML = `
+                                                    <div style="padding: 20px;">
+                                                        <div style="display: flex; align-items: end; height: 150px; gap: 5px;">
+                                                            ${prices.map((price, index) => `
+                                                                <div style="
+                                                                    width: ${400/prices.length - 5}px;
+                                                                    height: ${(price - minPrice) / (maxPrice - minPrice) * 120}px;
+                                                                    background: ${price > prices[index-1] ? '#28a745' : '#dc3545'};
+                                                                    border-radius: 3px 3px 0 0;
+                                                                    min-height: 5px;
+                                                                " title="₹${price} on ${{ crop }}_data[${index}].date}"></div>
+                                                            `).join('')}
+                                                        </div>
+                                                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                                            <small>₹${minPrice}</small>
+                                                            <small>₹${maxPrice}</small>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            </script>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- AI Predictions Tab -->
+                        <div class="tab-pane fade" id="predictions" role="tabpanel">
+                            <h5 class="mb-3">🔮 AI Price Predictions (Next 7 Days)</h5>
+                            <div class="row">
+                                {% for crop, data in market_data.items() %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0 text-capitalize">{{ crop }} Predictions</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <h4 class="text-success mb-1">₹{{ (data.current_price * 1.05)|round(1) }}</h4>
+                                                    <small class="text-muted">Expected High</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <h4 class="text-danger mb-1">₹{{ (data.current_price * 0.95)|round(1) }}</h4>
+                                                    <small class="text-muted">Expected Low</small>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress mb-2">
+                                                    <div class="progress-bar bg-success" style="width: 60%">
+                                                        Bullish Trend (60%)
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">
+                                                    AI Confidence: High | Based on market volatility and seasonal trends
+                                                </small>
+                                            </div>
+                                            <div class="mt-3">
+                                                <span class="badge bg-info me-2">📈 Strong Buy</span>
+                                                <span class="badge bg-warning">⏰ Hold for 3-5 days</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Market Analytics Tab -->
+                        <div class="tab-pane fade" id="analytics" role="tabpanel">
+                            <h5 class="mb-3">📊 Market Analytics Dashboard</h5>
+
+                            <!-- Volume Analysis -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">📦 Trading Volume Analysis</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="volume_chart" width="400" height="200"></canvas>
+                                            <script>
+                                                const volume_ctx = document.getElementById('volume_chart');
+                                                const volume_data = {{ market_data|tojson }};
+
+                                                const volumes = Object.values(volume_data).map(d => d.volume);
+                                                const crops = Object.keys(volume_data);
+
+                                                volume_ctx.innerHTML = `
+                                                    <div style="padding: 20px;">
+                                                        <div style="display: flex; align-items: end; height: 150px; gap: 10px;">
+                                                            ${volumes.map((volume, index) => `
+                                                                <div style="
+                                                                    width: ${350/volumes.length}px;
+                                                                    height: ${volume / Math.max(...volumes) * 120}px;
+                                                                    background: linear-gradient(to top, #17a2b8, #6c757d);
+                                                                    border-radius: 3px 3px 0 0;
+                                                                    min-height: 5px;
+                                                                " title="${crops[index]}: ${volume} MT"></div>
+                                                            `).join('')}
+                                                        </div>
+                                                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                                            <small>${Math.min(...volumes)} MT</small>
+                                                            <small>${Math.max(...volumes)} MT</small>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            </script>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">💰 Price Distribution</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span>High Price Crops (>₹50)</span>
+                                                    <span class="badge bg-success">{{ market_data|selectattr('current_price', '>', 50)|list|length }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span>Medium Price Crops (₹30-50)</span>
+                                                    <span class="badge bg-warning">{{ market_data|selectattr('current_price', '>', 30)|selectattr('current_price', '<=', 50)|list|length }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>Low Price Crops (<₹30)</span>
+                                                    <span class="badge bg-danger">{{ market_data|selectattr('current_price', '<=', 30)|list|length }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Market Health Indicators -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">🏥 Market Health Indicators</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-md-3">
+                                                    <h2 class="text-success mb-1">{{ market_data|selectattr('trend', 'equalto', 'up')|list|length }}</h2>
+                                                    <small class="text-muted">Growing Markets</small>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <h2 class="text-danger mb-1">{{ market_data|selectattr('trend', 'equalto', 'down')|list|length }}</h2>
+                                                    <small class="text-muted">Declining Markets</small>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <h2 class="text-primary mb-1">{{ (market_data|sum(attribute='volume')/1000)|round(1) }}K</h2>
+                                                    <small class="text-muted">Total Volume (MT)</small>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <h2 class="text-info mb-1">{{ market_data|avg(attribute='change_percent')|round(1) }}%</h2>
+                                                    <small class="text-muted">Avg. Change</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3">🚀 Quick Actions</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" onclick="window.location.href='/marketplace'">
+                                <i class="bi bi-shop me-2"></i> Visit Marketplace
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100" onclick="setPriceAlert()">
+                                <i class="bi bi-bell me-2"></i> Set Price Alert
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100" onclick="viewMarketNews()">
+                                <i class="bi bi-newspaper me-2"></i> Market News
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100" onclick="getExpertAdvice()">
+                                <i class="bi bi-headset me-2"></i> Expert Advice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshPrices() {
+    // Simulate price refresh
+    location.reload();
+}
+
+function exportData() {
+    // Simple data export functionality
+    const data = {{ market_data|tojson }};
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'market_data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function setPriceAlert() {
+    alert('Price alert feature coming soon!');
+}
+
+function viewMarketNews() {
+    alert('Market news feature coming soon!');
+}
+
+function getExpertAdvice() {
+    alert('Expert consultation feature coming soon!');
+}
+</script>
+{% endblock %}

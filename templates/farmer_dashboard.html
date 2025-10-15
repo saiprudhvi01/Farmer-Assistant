@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Farmer Dashboard - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Farmer Dashboard</h2>
+                    {% if farmer %}
+                    <p class="text-muted mb-0">Welcome back, {{ farmer.get_full_name() }}!</p>
+                    {% else %}
+                    <p class="text-muted mb-0">Welcome! Start by adding your first crop listing.</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('marketplace') }}" class="btn btn-primary">
+                    <i class="bi bi-shop me-2"></i>Manage Listings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam text-success fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ listings|length }}</h4>
+                    <small class="text-muted">Active Listings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-handshake text-warning fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ pending_offers|length }}</h4>
+                    <small class="text-muted">Pending Offers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle text-success fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ accepted_offers|length }}</h4>
+                    <small class="text-muted">Accepted Offers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up text-info fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ completed_offers|length }}</h4>
+                    <small class="text-muted">Completed Sales</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <ul class="nav nav-tabs card-header-tabs" id="activityTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="offers-tab" data-bs-toggle="tab" data-bs-target="#offers" type="button" role="tab">
+                                <i class="bi bi-handshake me-1"></i>Offers & Requests
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="listings-tab" data-bs-toggle="tab" data-bs-target="#listings" type="button" role="tab">
+                                <i class="bi bi-box-seam me-1"></i>My Listings
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                                <i class="bi bi-check-circle me-1"></i>Completed Sales
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="activityTabsContent">
+                        <!-- Offers Tab -->
+                        <div class="tab-pane fade show active" id="offers" role="tabpanel">
+                            {% if accepted_offers %}
+                            <div class="row g-4">
+                                {% for offer in accepted_offers %}
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h5 class="card-title mb-2">{{ offer.listing.crop_name }}</h5>
+                                                    <div class="d-flex align-items-center text-muted mb-2">
+                                                        <i class="bi bi-person me-2"></i>
+                                                        <span>{{ offer.buyer.get_full_name() }}</span>
+                                                        <span class="mx-2">•</span>
+                                                        <i class="bi bi-geo-alt me-1"></i>
+                                                        {{ offer.buyer.location }}
+                                                        <span class="mx-2">•</span>
+                                                        <i class="bi bi-telephone me-1"></i>
+                                                        {{ offer.buyer.phone }}
+                                                    </div>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted d-block">Quantity</small>
+                                                            <span class="fw-bold">{{ "%.1f"|format(offer.offer_quantity) }} {{ offer.listing.unit }}</span>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted d-block">Offer Price</small>
+                                                            <span class="fw-bold text-success">₹{{ "%.2f"|format(offer.offer_price) }}/unit</span>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted d-block">Total Value</small>
+                                                            <span class="fw-bold">₹{{ "%.2f"|format(offer.offer_price * offer.offer_quantity) }}</span>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted d-block">Status</small>
+                                                            <span class="badge bg-success">Accepted</span>
+                                                        </div>
+                                                    </div>
+                                                    {% if offer.message %}
+                                                    <div class="mt-3">
+                                                        <small class="text-muted">Message:</small>
+                                                        <p class="mb-0">{{ offer.message }}</p>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="text-end">
+                                                    <small class="text-muted d-block">Accepted</small>
+                                                    <span class="fw-bold">{{ offer.updated_at.strftime('%d %b %Y') if offer.updated_at else 'N/A' }}</span>
+                                                    <div class="mt-3">
+                                                        <button class="btn btn-success btn-sm" onclick="markAsCompleted({{ offer.id }})">
+                                                            <i class="bi bi-check-circle me-1"></i>Mark Completed
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-handshake display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Accepted Offers</h5>
+                                <p class="text-muted">Offers you accept will appear here. Check your listings for pending offers.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- My Listings Tab -->
+                        <div class="tab-pane fade" id="listings" role="tabpanel">
+                            {% if listings %}
+                            <div class="row g-4">
+                                {% for listing in listings %}
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h5 class="card-title mb-1">{{ listing.crop_name }}</h5>
+                                                    <p class="text-muted small mb-0">{{ listing.variety or 'Standard Variety' }}</p>
+                                                </div>
+                                                <span class="badge {% if listing.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                                    {% if listing.is_available %}Available{% else %}Sold{% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-6">
+                                                    <small class="text-muted d-block">Quantity</small>
+                                                    <span class="fw-bold">{{ "%.1f"|format(listing.quantity) }} {{ listing.unit }}</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted d-block">Price</small>
+                                                    <span class="fw-bold text-success">₹{{ "%.2f"|format(listing.price_per_unit) }}/unit</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex gap-2">
+                                                <a href="{{ url_for('marketplace') }}" class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-pencil me-1"></i>Edit Listing
+                                                </a>
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="viewOffers({{ listing.id }})">
+                                                    <i class="bi bi-eye me-1"></i>View Offers (0)
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-light">
+                                            <small class="text-muted">
+                                                Listed {{ listing.created_at.strftime('%d %b %Y') if listing.created_at else 'N/A' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-box-seam display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Active Listings</h5>
+                                <p class="text-muted">You haven't created any crop listings yet.</p>
+                                <a href="{{ url_for('marketplace') }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Create Your First Listing
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Completed Sales Tab -->
+                        <div class="tab-pane fade" id="completed" role="tabpanel">
+                            <div class="text-center py-4">
+                                <i class="bi bi-check-circle display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Completed Sales</h5>
+                                <p class="text-muted">Completed sales will appear here once you mark offers as completed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewOffers(listingId) {
+    // TODO: Show offers for this listing
+    alert('View offers functionality will be implemented');
+}
+
+function markAsCompleted(offerId) {
+    if (confirm('Mark this offer as completed? This will finalize the sale.')) {
+        // TODO: Implement mark as completed
+        alert('Mark as completed functionality will be implemented');
+    }
+}
+</script>
+{% endblock %}

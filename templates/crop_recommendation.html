@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Recommendation - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="h4 mb-0">Crop Recommendation</h2>
+                <p class="text-muted mb-0">Get personalized crop suggestions based on your farm's conditions</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('crop_recommendation') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location"
+                                   value="{{ form_data.location if form_data else '' }}" placeholder="Enter your city/state" required>
+                            <div class="form-text">Enter your city, state, or region for weather data</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="soil_type" class="form-label">Soil Type</label>
+                            <select class="form-select" id="soil_type" name="soil_type" required>
+                                <option value="" disabled {% if not form_data %}selected{% endif %}>Select soil type</option>
+                                <option value="sandy" {% if form_data and form_data.soil_type == 'sandy' %}selected{% endif %}>Sandy</option>
+                                <option value="loamy" {% if form_data and form_data.soil_type == 'loamy' %}selected{% endif %}>Loamy</option>
+                                <option value="clay" {% if form_data and form_data.soil_type == 'clay' %}selected{% endif %}>Clay</option>
+                                <option value="silty" {% if form_data and form_data.soil_type == 'silty' %}selected{% endif %}>Silty</option>
+                                <option value="peaty" {% if form_data and form_data.soil_type == 'peaty' %}selected{% endif %}>Peaty</option>
+                                <option value="chalky" {% if form_data and form_data.soil_type == 'chalky' %}selected{% endif %}>Chalky</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="ph" class="form-label">Soil pH Level</label>
+                            <input type="number" class="form-control" id="ph" name="ph"
+                                   min="0" max="14" step="0.1"
+                                   value="{{ form_data.ph if form_data else '6.5' }}" required>
+                            <div class="form-text">0 (acidic) to 14 (alkaline)</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="rainfall" class="form-label">Annual Rainfall (mm)</label>
+                            <input type="number" class="form-control" id="rainfall" name="rainfall"
+                                   min="0" step="10"
+                                   value="{{ form_data.rainfall if form_data else '1000' }}" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="temperature" class="form-label">Average Temperature (°C)</label>
+                            <input type="number" class="form-control" id="temperature" name="temperature"
+                                   min="-20" max="50" step="0.1"
+                                   value="{{ form_data.temperature if form_data else '25' }}" required>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-search me-2"></i> Get Recommendations
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if recommended_crops %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h3 class="h5 mb-0">Recommended Crops</h3>
+                <p class="text-muted mb-0">Based on your farm's conditions</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    {% for rec in recommended_crops %}
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="crop-icon bg-success bg-opacity-10 text-success rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px;">
+                                    <i class="bi bi-tree fs-3"></i>
+                                </div>
+                                <h4 class="h5 mb-2">{{ rec.crop.title() }}</h4>
+                                <p class="text-muted mb-3">{{ rec.season }} Season</p>
+
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                         style="width: {{ rec.confidence }}%"
+                                         aria-valuenow="{{ rec.confidence }}"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <span class="badge bg-{{ 'success' if rec.confidence > 80 else 'warning' if rec.confidence > 60 else 'info' }}">
+                                        {{ rec.confidence }}% Confidence
+                                    </span>
+                                    {% if rec.method %}
+                                    <small class="text-muted d-block">{{ rec.method }}</small>
+                                    {% endif %}
+                                </div>
+
+                                <div class="small text-muted">
+                                    <div class="mb-1"><strong>Best for:</strong></div>
+                                    <div>{{ rec.season }} season</div>
+                                    <div>{{ soil_type.title() if soil_type else 'Your soil type' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    <h5 class="alert-heading"><i class="bi bi-lightbulb me-2"></i>Growing Tips</h5>
+                    <ul class="mb-0">
+                        <li>Test your soil regularly to monitor pH and nutrient levels</li>
+                        <li>Consider crop rotation to maintain soil health</li>
+                        <li>Use organic matter to improve soil structure and fertility</li>
+                        <li>Consult local agricultural extension services for region-specific advice</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if chart_data %}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h3 class="h5 mb-0">Confidence Levels</h3>
+                <p class="text-muted mb-0">Visual comparison of recommended crops</p>
+            </div>
+            <div class="card-body">
+                <canvas id="confidenceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if chart_data %}
+const ctx = document.getElementById('confidenceChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {{ chart_data | tojson }},
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

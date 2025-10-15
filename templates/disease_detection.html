@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Disease Detection - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Disease Detection Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold mb-3">Crop Disease Detection</h1>
+                <p class="lead text-muted">Select your crop and symptoms to get AI-powered disease diagnosis and treatment recommendations.</p>
+            </div>
+
+            <!-- Detection Form -->
+            <div class="card border-0 shadow-sm mb-5">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="crop" class="form-label">Crop Type</label>
+                            <select class="form-select" id="crop" name="crop" required>
+                                <option value="">Select your crop type</option>
+                                <option value="Rice">Rice</option>
+                                <option value="Wheat">Wheat</option>
+                                <option value="Maize">Maize</option>
+                                <option value="Cotton">Cotton</option>
+                                <option value="Sugarcane">Sugarcane</option>
+                                <option value="Tomato">Tomato</option>
+                                <option value="Potato">Potato</option>
+                                <option value="Onion">Onion</option>
+                                <option value="Soybean">Soybean</option>
+                                <option value="Groundnut">Groundnut</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observed Symptoms</label>
+                            <p class="text-muted small mb-2">Select all symptoms that you observe on your crop</p>
+
+                            <!-- All Symptoms -->
+                            <div id="all-symptoms">
+                                <!-- Dynamic checkboxes will be inserted here -->
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-search me-2"></i> Detect Diseases
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if results %}
+            <!-- Results Section -->
+            <div class="card border-0 shadow-sm mb-5">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-4">Disease Detection Results</h2>
+
+                    {% for result in results %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ result.disease }}</h5>
+                            <p class="card-text">
+                                <strong>Recommended Pesticide:</strong> {{ result.pesticide }}<br>
+                                <strong>Cost per Hectare:</strong> ${{ result.cost_per_ha }}<br>
+                                <strong>Matched Symptoms:</strong> {{ result.matched_symptoms|join(', ') }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% if graph_data %}
+                    <h5 class="h5 mb-3">Causal Visualization</h5>
+                    {% for graph in graph_data %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ graph.title }}</h6>
+                            <div id="graph-{{ loop.index }}" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cropSelect = document.getElementById('crop');
+    const allSymptomsContainer = document.getElementById('all-symptoms');
+
+    // Define symptoms by crop
+    const symptomsByCrop = {{ symptoms_dict | tojson }};
+
+    function populateSymptoms(crop) {
+        const cropSymptoms = symptomsByCrop[crop.toLowerCase()] || [];
+
+        // Clear container
+        allSymptomsContainer.innerHTML = '';
+
+        // Add all symptoms as checkboxes
+        cropSymptoms.forEach(symptom => {
+            const div = document.createElement('div');
+            div.className = 'form-check';
+            div.innerHTML = `
+                <input class="form-check-input" type="checkbox" name="symptoms" value="${symptom}" id="${symptom.replace(/\s+/g, '-')}">
+                <label class="form-check-label" for="${symptom.replace(/\s+/g, '-')}">${symptom.charAt(0).toUpperCase() + symptom.slice(1)}</label>
+            `;
+            allSymptomsContainer.appendChild(div);
+        });
+    }
+
+    // Initial load
+    populateSymptoms(cropSelect.value);
+
+    // On crop change
+    cropSelect.addEventListener('change', function() {
+        populateSymptoms(this.value);
+    });
+
+    // Render causal graphs if available
+    {% if graph_data %}
+    {% for graph in graph_data %}
+    const container{{ loop.index }} = document.getElementById('graph-{{ loop.index }}');
+    const data{{ loop.index }} = {
+        nodes: new vis.DataSet({{ graph.nodes | tojson }}),
+        edges: new vis.DataSet({{ graph.edges | tojson }})
+    };
+    const options{{ loop.index }} = {
+        nodes: {
+            shape: 'box',
+            font: { size: 14 },
+            color: {
+                background: '#ffffff',
+                border: '#000000'
+            }
+        },
+        edges: {
+            arrows: 'to'
+        },
+        physics: {
+            enabled: false
+        },
+        layout: {
+            hierarchical: {
+                direction: 'UD'
+            }
+        }
+    };
+    new vis.Network(container{{ loop.index }}, data{{ loop.index }}, options{{ loop.index }});
+    {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

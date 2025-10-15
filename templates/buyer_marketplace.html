@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">{{ title }}</h2>
+                    <p class="text-muted mb-0">Browse available crops and market trends</p>
+                </div>
+                <a href="{{ url_for('market_trends') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-graph-up me-2"></i>View Detailed Trends
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-shop text-success fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ listings|length }}</h4>
+                    <small class="text-muted">Available Crops</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-people text-primary fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ (market_data|length) }}</h4>
+                    <small class="text-muted">Market Locations</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up text-warning fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ price_history|length }}</h4>
+                    <small class="text-muted">Price Trends</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck text-info fs-1 mb-2"></i>
+                    <h4 class="mb-1">{{ listings|selectattr('is_available')|list|length }}</h4>
+                    <small class="text-muted">Ready for Purchase</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs for Marketplace and Trends -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <ul class="nav nav-tabs card-header-tabs" id="buyerTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="marketplace-tab" data-bs-toggle="tab" data-bs-target="#marketplace" type="button" role="tab">
+                                <i class="bi bi-shop me-1"></i>Marketplace
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="trends-tab" data-bs-toggle="tab" data-bs-target="#trends" type="button" role="tab">
+                                <i class="bi bi-graph-up me-1"></i>Market Trends
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="buyerTabsContent">
+                        <!-- Marketplace Tab -->
+                        <div class="tab-pane fade show active" id="marketplace" role="tabpanel">
+                            {% if listings %}
+                            <div class="row g-4">
+                                {% for listing in listings %}
+                                <div class="col-lg-6 col-xl-4">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h5 class="card-title mb-1">{{ listing.crop_name }}</h5>
+                                                    <p class="text-muted small mb-0">{{ listing.variety or 'Standard Variety' }}</p>
+                                                </div>
+                                                {% if listing.is_organic %}
+                                                <span class="badge bg-success">Organic</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Farmer Info -->
+                                            <div class="farmer-info p-3 bg-light rounded mb-3">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="farmer-avatar me-3">
+                                                        <i class="bi bi-person-circle text-primary fs-3"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-1">{{ listing.farmer.get_full_name() }}</h6>
+                                                        <div class="d-flex align-items-center text-muted small">
+                                                            <i class="bi bi-geo-alt me-1"></i>
+                                                            {{ listing.location }}
+                                                        </div>
+                                                        <div class="d-flex align-items-center text-muted small mt-1">
+                                                            <i class="bi bi-telephone me-1"></i>
+                                                            {{ listing.farmer.phone }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Crop Details -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-6">
+                                                    <div class="text-center p-2 bg-light rounded">
+                                                        <i class="bi bi-boxes text-primary mb-1"></i>
+                                                        <div class="fw-bold">{{ "%.1f"|format(listing.quantity) }} {{ listing.unit }}</div>
+                                                        <small class="text-muted">Available</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-center p-2 bg-light rounded">
+                                                        <i class="bi bi-currency-rupee text-success mb-1"></i>
+                                                        <div class="fw-bold">{{ "%.2f"|format(listing.price_per_unit) }}</div>
+                                                        <small class="text-muted">per {{ listing.unit }}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {% if listing.description %}
+                                            <p class="text-muted small mb-3">{{ listing.description }}</p>
+                                            {% endif %}
+
+                                            <!-- Action Buttons -->
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-primary" onclick="makeOffer({{ listing.id }})">
+                                                    <i class="bi bi-handshake me-2"></i>Make Offer
+                                                </button>
+                                                <button class="btn btn-outline-secondary" onclick="contactFarmer({{ listing.id }})">
+                                                    <i class="bi bi-telephone me-2"></i>Contact Farmer
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-light text-center">
+                                            <small class="text-muted">
+                                                Listed {{ listing.created_at.strftime('%d %b %Y') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-shop display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Crops Available</h5>
+                                <p class="text-muted">No crops are currently available in the marketplace. Check back later!</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Market Trends Tab -->
+                        <div class="tab-pane fade" id="trends" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5>Market Prices</h5>
+                                    {% if market_data %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Crop</th>
+                                                    <th>Variety</th>
+                                                    <th>Price (₹/kg)</th>
+                                                    <th>Location</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in market_data[:10] %}
+                                                <tr>
+                                                    <td>{{ item.crop }}</td>
+                                                    <td>{{ item.variety }}</td>
+                                                    <td class="fw-bold text-success">{{ "%.2f"|format(item.price) }}</td>
+                                                    <td>{{ item.location }}</td>
+                                                    <td>{{ item.date }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No market data available.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <h5>Price Trends</h5>
+                                    {% if price_history %}
+                                    <div class="mb-4">
+                                        {% for crop, data in price_history.items() %}
+                                        <div class="card mb-3">
+                                            <div class="card-body">
+                                                <h6 class="card-title">{{ crop|title }}</h6>
+                                                <div class="d-flex justify-content-between">
+                                                    <small class="text-muted">Latest: ₹{{ "%.2f"|format(data[-1].price) }}</small>
+                                                    <small class="text-muted">{{ data[-1].date }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No price history available.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function makeOffer(listingId) {
+    // TODO: Open offer modal for this listing
+    alert('Make offer functionality for listing ' + listingId + ' will be implemented');
+}
+
+function contactFarmer(listingId) {
+    // TODO: Open contact modal or show farmer details
+    alert('Contact farmer functionality for listing ' + listingId + ' will be implemented');
+}
+</script>
+
+<style>
+.farmer-info {
+    border-left: 4px solid #0d6efd;
+}
+
+.farmer-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+</style>
+{% endblock %}
