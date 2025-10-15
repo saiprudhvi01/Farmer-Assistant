@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SelectField, FloatField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, Optional
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
 
 # Import User after models are initialized - use lazy import
 def _get_user_model():
@@ -17,7 +17,7 @@ class RegistrationForm(FlaskForm):
     # Personal Information
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    email = StringField('Email', validators=[DataRequired(), Length(max=120)])
     phone = StringField('Phone Number', validators=[DataRequired(), Length(min=10, max=15)])
     location = StringField('Location', validators=[DataRequired(), Length(min=2, max=100)])
 
