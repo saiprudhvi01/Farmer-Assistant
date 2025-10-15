@@ -3,7 +3,7 @@ Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.0.36
 Flask-Migrate==4.0.5
 Flask-Caching==2.1.0
-Flask-Babel==3.1.0
+Flask-Babel==4.0.0
 requests==2.31.0
 numpy==2.1.0
 pandas==2.3.0
