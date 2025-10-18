@@ -1105,11 +1105,15 @@ def disease_detection():
                 # Dummy image analysis (pretend to analyze the image)
                 image_analysis_result = analyze_crop_image(image_path, crop)
 
-        if not crop or not uploaded_image:
-            flash('Please select a crop and upload an image for disease detection', 'warning')
+        # Validate inputs - only require crop selection, image is optional but recommended
+        if not crop:
+            flash('Please select a crop type for disease detection', 'warning')
             return redirect(request.url)
 
-        # Detect diseases using symptoms
+        if not uploaded_image:
+            flash('Please upload an image of your crop for better disease detection accuracy', 'info')
+
+        # Detect diseases using symptoms (can work with or without image)
         results = disease_detector.detect_disease(crop, symptoms)
 
         # If image was uploaded, combine results with image analysis
