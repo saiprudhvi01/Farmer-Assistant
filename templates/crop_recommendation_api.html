@@ -104,7 +104,28 @@
                 </div>
                 {% endif %}
 
-                <!-- Action Buttons -->
+                <!-- Price Information -->
+                {% if api_result.price_data %}
+                <h5 class="mt-4">💰 Market Prices for Recommended Crops</h5>
+                <div class="row">
+                    {% for price_info in api_result.price_data %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100 border-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title text-info">{{ price_info.crop }}</h6>
+                                        <p class="mb-1"><strong>₹{{ price_info.price }} per {{ price_info.unit }}</strong></p>
+                                        <small class="text-muted">{{ price_info.variety }} • {{ price_info.location }}</small>
+                                    </div>
+                                    <span class="badge bg-info">{{ price_info.source }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 <div class="row mt-4">
                     <div class="col-12 text-center">
                         <a href="{{ url_for('crop_recommendation_api') }}" class="btn btn-outline-primary me-2">

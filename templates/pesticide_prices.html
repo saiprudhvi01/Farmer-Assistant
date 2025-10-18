@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Pesticide Prices - Farmer Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-cash-coin me-2"></i>Pesticide Prices</h1>
+            <a href="{{ url_for('disease_detection') }}" class="btn btn-outline-success">
+                <i class="bi bi-bug me-1"></i> Disease Detection
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted">Click on any crop below to view pesticide prices and costs for different diseases. These prices are per hectare and may vary based on location and market conditions.</p>
+
+                <!-- Crop Selection Interface -->
+                <div class="mb-4">
+                    <h3 class="mb-3">Select a Crop</h3>
+                    <div class="row">
+                        {% for crop, items in crops_data.items() %}
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card crop-card h-100" style="cursor: pointer; transition: transform 0.2s;" onclick="showCropDetails('{{ crop }}')">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-flower1 fs-1 text-success mb-2"></i>
+                                    <h5 class="card-title">{{ crop }}</h5>
+                                    <p class="card-text text-muted">{{ items|length }} diseases</p>
+                                    <small class="text-primary">Click to view details</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Selected Crop Details (Initially Hidden) -->
+                <div id="crop-details" class="crop-details-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 id="selected-crop-title">Selected Crop Details</h3>
+                        <button class="btn btn-outline-secondary" onclick="hideCropDetails()">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Crop Selection
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Disease</th>
+                                    <th>Pesticide</th>
+                                    <th>Cost per Hectare</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crop-pesticides-body">
+                                <!-- Dynamic content will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Stats (Initially Visible) -->
+                <div id="quick-stats" class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{ crops_data|length }}</h5>
+                                <p class="card-text">Crops Available</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">{{ pesticide_data|length }}</h5>
+                                <p class="card-text">Total Disease-Pesticide Combinations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-info">
+                                    ${{ pesticide_data|map(attribute='cost_per_ha')|list|sum / pesticide_data|length|round(1) }}
+                                </h5>
+                                <p class="card-text">Average Cost per Hectare</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning">
+                                    ${{ pesticide_data|map(attribute='cost_per_ha')|list|max }}
+                                </h5>
+                                <p class="card-text">Highest Cost</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showCropDetails(cropName) {
+    // Hide crop selection and stats
+    document.querySelectorAll('.crop-card').forEach(card => {
+        card.style.display = 'none';
+    });
+    document.getElementById('quick-stats').style.display = 'none';
+
+    // Show crop details section
+    document.getElementById('crop-details').style.display = 'block';
+
+    // Update title
+    document.getElementById('selected-crop-title').innerHTML = `<i class="bi bi-flower1 me-2"></i>${cropName} - Pesticide Details`;
+
+    // Get crop data
+    const cropData = {{ crops_data|tojson }};
+
+    // Populate table with crop-specific data
+    const tbody = document.getElementById('crop-pesticides-body');
+    tbody.innerHTML = '';
+
+    if (cropData[cropName]) {
+        cropData[cropName].forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.disease}</td>
+                <td><strong>${item.pesticide}</strong></td>
+                <td><span class="text-success fw-bold">₹${item.cost_per_ha}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info" onclick="showPesticideInfo('${item.pesticide}', '${item.disease}', ${item.cost_per_ha})">
+                        <i class="bi bi-info-circle me-1"></i> More Info
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+}
+
+function hideCropDetails() {
+    // Show crop selection and stats
+    document.querySelectorAll('.crop-card').forEach(card => {
+        card.style.display = 'block';
+    });
+    document.getElementById('quick-stats').style.display = 'block';
+
+    // Hide crop details section
+    document.getElementById('crop-details').style.display = 'none';
+}
+
+function showPesticideInfo(pesticide, disease, cost) {
+    // Simple alert for now - could be enhanced with a modal
+    alert(`Pesticide: ${pesticide}\nDisease: ${disease}\nCost per Hectare: ₹${cost}\n\nThis pesticide is recommended for treating ${disease} in crops. Always follow safety guidelines and consult local agricultural experts for proper usage.`);
+}
+</script>
+
+<style>
+.crop-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

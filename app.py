@@ -854,14 +854,14 @@ class DiseaseDetector:
                 "symptoms": ["yellow leaves", "brown spots", "stunted growth", "leaf rot", "whitish powder"],
                 "disease": "Brown Spot",
                 "pesticide": "Mancozeb",
-                "cost_per_ha": 100
+                "cost_per_ha": 2500
             },
             {
                 "crop": "Rice",
                 "symptoms": ["leaf blight", "yellow stripes", "necrotic lesions", "wilt", "dry tips"],
                 "disease": "Bacterial Leaf Blight",
                 "pesticide": "Copper Oxychloride",
-                "cost_per_ha": 120
+                "cost_per_ha": 3200
             },
             # Wheat
             {
@@ -869,14 +869,14 @@ class DiseaseDetector:
                 "symptoms": ["yellow streaks", "leaf rust", "red pustules", "brown spots", "premature leaf death"],
                 "disease": "Leaf Rust",
                 "pesticide": "Propiconazole",
-                "cost_per_ha": 90
+                "cost_per_ha": 2800
             },
             {
                 "crop": "Wheat",
                 "symptoms": ["white powdery leaves", "stunted growth", "deformed spikes", "yellow leaves", "reduced yield"],
                 "disease": "Powdery Mildew",
                 "pesticide": "Sulfur",
-                "cost_per_ha": 80
+                "cost_per_ha": 2200
             },
             # Maize
             {
@@ -884,7 +884,7 @@ class DiseaseDetector:
                 "symptoms": ["yellow leaves", "cob rot", "brown lesions", "brown spots", "stunted growth", "wilting"],
                 "disease": "Maize Streak Virus",
                 "pesticide": "Imidacloprid",
-                "cost_per_ha": 110
+                "cost_per_ha": 3500
             },
             # Cotton
             {
@@ -892,7 +892,7 @@ class DiseaseDetector:
                 "symptoms": ["leaf spots", "yellowing", "boll rot", "wilt", "defoliation"],
                 "disease": "Bacterial Blight",
                 "pesticide": "Copper Oxychloride",
-                "cost_per_ha": 130
+                "cost_per_ha": 3800
             },
             # Sugarcane
             {
@@ -900,7 +900,7 @@ class DiseaseDetector:
                 "symptoms": ["reddish streaks", "wilting", "brown spots", "stunted growth", "leaf curling"],
                 "disease": "Red Rot",
                 "pesticide": "Carbendazim",
-                "cost_per_ha": 150
+                "cost_per_ha": 4200
             },
             # Tomato
             {
@@ -908,7 +908,7 @@ class DiseaseDetector:
                 "symptoms": ["yellow leaves", "spots on leaves", "wilting", "fruit rot", "leaf curl"],
                 "disease": "Early Blight",
                 "pesticide": "Chlorothalonil",
-                "cost_per_ha": 120
+                "cost_per_ha": 3100
             },
             # Potato
             {
@@ -916,7 +916,7 @@ class DiseaseDetector:
                 "symptoms": ["brown spots", "leaf curl", "wilting", "tuber rot", "yellow leaves"],
                 "disease": "Late Blight",
                 "pesticide": "Metalaxyl",
-                "cost_per_ha": 110
+                "cost_per_ha": 3300
             },
             # Onion
             {
@@ -924,7 +924,7 @@ class DiseaseDetector:
                 "symptoms": ["yellow leaves", "neck rot", "leaf spots", "wilting", "soft rot"],
                 "disease": "Purple Blotch",
                 "pesticide": "Mancozeb",
-                "cost_per_ha": 95
+                "cost_per_ha": 2600
             },
             # Soybean
             {
@@ -932,7 +932,7 @@ class DiseaseDetector:
                 "symptoms": ["yellow leaves", "leaf spots", "wilt", "stem lesions", "defoliation"],
                 "disease": "Soybean Rust",
                 "pesticide": "Trifloxystrobin",
-                "cost_per_ha": 100
+                "cost_per_ha": 2900
             },
             # Groundnut
             {
@@ -940,7 +940,7 @@ class DiseaseDetector:
                 "symptoms": ["yellow leaves", "leaf spots", "wilting", "pod rot", "stunted growth"],
                 "disease": "Leaf Spot",
                 "pesticide": "Chlorothalonil",
-                "cost_per_ha": 85
+                "cost_per_ha": 2400
             }
         ]
 
@@ -987,7 +987,7 @@ class DiseaseDetector:
 Causal Analysis for {crop}:
 The disease '{r['disease']}' was detected primarily due to the presence of symptoms {r['matched_symptoms']}. 
 These symptoms indicate stress or infection in the crop that, if left unchecked, could lead to significant yield loss, stunted growth, or complete crop failure. 
-Immediate application of the recommended pesticide '{pesticide}' at a cost of ${cost} per hectare is advised to mitigate the spread. 
+Immediate application of the recommended pesticide '{pesticide}' at a cost of ₹{cost} per hectare is advised to mitigate the spread. 
 Monitoring and preventive measures should follow to avoid recurrence, ensuring crop health and productivity.
 """
             analysis.append(para.strip())
@@ -1044,6 +1044,30 @@ def analyze_crop_image(image_path, crop_type):
 
 
 
+@app.route('/pesticide-prices')
+def pesticide_prices():
+    """Display pesticide prices and costs for different crops and diseases."""
+    # Extract pesticide data from disease detector rules
+    pesticide_data = []
+    for rule in disease_detector.disease_rules:
+        pesticide_data.append({
+            'crop': rule['crop'],
+            'disease': rule['disease'],
+            'pesticide': rule['pesticide'],
+            'cost_per_ha': rule['cost_per_ha']
+        })
+
+    # Group by crop for better organization
+    crops_data = {}
+    for item in pesticide_data:
+        crop = item['crop']
+        if crop not in crops_data:
+            crops_data[crop] = []
+        crops_data[crop].append(item)
+
+    return render_template('pesticide_prices.html',
+                         pesticide_data=pesticide_data,
+                         crops_data=crops_data)
 @app.route('/disease-detection', methods=['GET', 'POST'])
 def disease_detection():
     """Disease detection based on crop symptoms and image analysis."""
@@ -1103,7 +1127,7 @@ def disease_detection():
             results = [{
                 'disease': image_analysis_result.get('detected_disease', 'Disease Detected'),
                 'pesticide': image_analysis_result.get('recommended_treatment', 'Consult expert'),
-                'cost_per_ha': 100,  # Default cost
+                'cost_per_ha': 2500,  # Default cost in rupees
                 'matched_symptoms': image_analysis_result.get('detected_symptoms', []),
                 'image_analysis': image_analysis_result
             }]
@@ -1131,7 +1155,7 @@ def disease_detection():
                 edges.append({'from': result['disease'], 'to': result['pesticide']})
 
                 # Add cost node
-                cost_label = f"${result['cost_per_ha']}/ha"
+                cost_label = f"₹{result['cost_per_ha']}/ha"
                 nodes.append({'id': cost_label, 'label': cost_label, 'group': 'cost'})
                 edges.append({'from': result['pesticide'], 'to': cost_label})
 
